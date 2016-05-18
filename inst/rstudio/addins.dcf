@@ -1,0 +1,5 @@
+Name: Preview Data Model
+Description: Renders Data Model Diagram
+Binding: display_graph_from_yaml_addin
+Interactive: true
+

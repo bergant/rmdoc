@@ -1,0 +1,207 @@
+---
+title: "Untitled"
+author:
+- Anonymous Author1
+- Anonymous Author2
+date: '`r Sys.Date()`'
+output:
+  word_document:
+    keep_md: yes
+    reference_docx: word-style.docx
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  html_document:
+    fig_caption: yes
+    keep_md: yes
+    number_sections: yes
+    self_contained: no
+    toc: yes
+    toc_float: yes
+params:
+  database: BasicDev
+  doc_type: Module concept-design
+  maintainer: Anonymous M.
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+# if(knitr::opts_knit$get("rmarkdown.pandoc.to") == "latex") {}
+library(rmdoc)
+library(DiagrammeR)
+```
+
+```{r database_setup, cache=TRUE}
+if(!is.null(params$database)) {
+  .rmdoc_db_meta <- get_db_meta(database = params$database) 
+}
+```
+
+<img width="150px" src="logo.png" style="position:absolute;top:5px;right:5px;" />
+
+# Introduction
+
+
+<!-- Purpose (why and who should read it) -->
+This document is a template for dynamic documentation. 
+<!-- Scope (but...)  -->
+While it demonstrates some of the power of dynamic documentation
+it is not meant to be a reference guide to [rmarkdown](http://rmarkdown.rstudio.com/) or [R language](https://www.r-project.org/).
+
+<!-- Definitions  -->
+
+<!-- References -->
+
+<!-- Steps overview -->
+
+
+# Equations
+
+Some equations to make this document look more serious:
+
+$$ E = m c^2 $$
+
+$$ s = \sqrt{\frac{1}{N-1} \sum_{i=1}^N (x_i - \overline{x})^2} $$
+
+
+
+# Plots
+
+An insightful plot to make it look good:
+
+```{r plots, cache=TRUE, eval=TRUE, fig.height=2}
+library(leaflet)
+m = leaflet() %>% addTiles()
+# set bounds
+m %>% 
+  fitBounds(0, 40, 14, 45) %>%
+  addPopups(12.5, 41.9, "All roads lead to Rome")
+```
+
+
+
+# Data model diagram
+Consider this data model diagram:
+
+```{r sample_diagram, echo=FALSE, cache=TRUE, fig.height=3}
+g1 <- get_graph_from_yaml(x = '
+# existing tables
+- extract_to: foo
+  tables:
+  - AC_BA_ACCOUNT
+  - AC_BA_ENTRY
+  - AC_BA_ENTRY_LINE
+
+#add some new tables (new design)
+- table: NEW_TABLE1
+  segment: foo
+  display: accent1
+  columns:
+    This is a new table: {key: yes}
+    Proposed_Field:
+    New_Field:
+
+- table: NEW_TABLE2
+  segment: foo
+  display: accent2
+  columns:
+    This is a new table: {key: yes}
+    Proposed_Field2: {ref: NEW_TABLE1}
+    New_Field3:
+')
+
+display_graph(g1)
+```
+
+# Complex System Diagrams
+
+
+```{r complex, cache=TRUE, fig.height=4}
+x <- 
+'digraph reporting {
+  rankdir = TB
+
+  edge[color=blue, fontcolor=blue]
+  
+  subgraph cluster_AdInsure {
+    label = "Some IT System"
+    subgraph cluster_db {
+      label = "Database"  
+      node[shape = rectangle, style=filled,  fillcolor="Honeydew"]
+      db_data[label = "Database Model"]
+      db_data_data[label = "Database Data"]
+    }
+    subgraph cluster_apis {
+      label = "Application Interfaces"  
+      node[shape = rectangle, style=filled,  fillcolor="Honeydew"]
+      api1[label = ""]
+      api2[label = ""]
+    }
+  }
+  # modules
+  node[shape = egg]
+
+  subgraph cluster_rmd {
+    label = "R Markdown"
+    r[label = "R"]
+    md[label = "Markdown", shape="rectangle"]
+    pandoc [label = "pandoc\ntexlive\nPhantomJS"]
+  }
+  subgraph cluster_report_src {
+    label = "Document Source"
+    rmd[label = "R Markdown\nSource", style=filled,  fillcolor="Honeydew"]
+    xlsx[label = "Excel Files", style=filled,  fillcolor="Honeydew"]
+  }
+  subgraph cluster_report {
+    label = "Final Document"  
+    node[shape = rectangle]
+    html[label = "HTML 5"]
+    doc[label = "MS Word docx"]
+    pdf[label = "PDF"]
+  }  
+  # data
+  db_data -> r[label="SQL"]
+  db_data_data -> r[label="SQL"]
+  api1 -> r
+  api2 -> r
+
+  # generate report
+  rmd -> r
+  xlsx -> r
+  r -> md
+  md -> pandoc -> html
+  pandoc -> doc
+  pandoc -> pdf
+  
+}
+'
+display_graph(x)
+```
+
+
+# Appendix I
+
+
+# Document properties
+
+```{r results='asis'}
+doc_prop <- list(
+  Maintainer = paste0(params$maintainer, collapse = ","),
+  Database = params$database,
+  Rmd = knitr::current_input(),
+  User = paste(Sys.info()["login"], "on", Sys.info()["nodename"]),
+  Created = Sys.time()
+)
+
+doc_prop[sapply(doc_prop, is.null)] <- NA
+
+df <- setNames(as.data.frame(t(data.frame(doc_prop))), c(""))
+knitr::kable(df, format = "markdown")
+
+```
+
+
+

@@ -1,0 +1,27 @@
+Package: rmdoc
+Type: Package
+Title: R Markdown Templates for Software Documentation
+Version: 0.1.0
+Date: 2016-05-02
+Author: Darko Bergant
+Maintainer: Darko Bergant <darko.bergant@gmail.com>
+#URL: https://github.com/bergant/datamodelr
+Description: Documentation templates
+    with additional support for diagramming with
+    DiagrammeR and datamodelr.
+Depends:
+    R (>= 3.2)
+License: MIT + file LICENSE
+Imports:
+    RODBC,
+    datamodelr,
+    knitr,
+    rstudioapi,
+    shiny,
+    readxl
+Suggests:
+    yaml,
+    DiagrammeR,
+    testthat
+LazyData: TRUE
+RoxygenNote: 5.0.1
