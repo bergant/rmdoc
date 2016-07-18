@@ -372,3 +372,76 @@ graph_display_options <- function(
 run_diagram_app <- function() {
     shiny::runApp(system.file("app", package = "rmdoc"))
 }
+
+#' Get Table Description
+#'
+#' Prints table description markdown
+#'
+#' @param tables Vector of table names
+#' @param db_meta Database meta data
+#' @param db_meta_desc Database meta data with table descriptions
+#' @export
+get_table_description <- function(tables, db_meta = NULL, db_meta_desc = NULL) {
+
+  if(missing(db_meta)) {
+    db_meta <- get0(".rmdoc_db_meta")
+  }
+  if(missing(db_meta_desc)) {
+    db_meta_desc <- get0(".rmdoc_db_meta_desc")
+  }
+
+  for(tab_name in tables) {
+
+    columns <- db_meta[db_meta$table == tab_name, ]
+    columns[columns$key == 1, "column"] <-
+      sprintf("**%s**", columns[columns$key == 1, "column"])
+    columns[!is.na(columns$ref), "column"] <-
+      sprintf("%s ^%s^",
+              columns[!is.na(columns$ref), "column"],
+              columns[!is.na(columns$ref), "ref"]
+      )
+
+    columns <- columns[, c(
+      "column", "description", "mandatory", "type_desc")
+      ]
+
+    columns[is.na(columns)] <-  ""
+    names(columns) <- c("Column", "Description", "M", "Type")
+
+    table_description <-
+      db_meta_desc$table_desc[db_meta_desc$name == tab_name]
+
+    table_description[is.na(table_description)] <- ""
+
+    table_md <-
+      knitr::kable(format = "markdown",
+                   columns, row.names = FALSE, caption = tab_name, align = "l"
+      )
+
+    table_md <- c(sprintf("\n###Table %s\n\n%s\n\n", tab_name, table_description), table_md)
+    attr(table_md, "format") <- "markdown"
+    class(table_md) <- "knitr_kable"
+    print(table_md)
+  }
+}
+
+#' Print Diagram Description
+#'
+#' @param diagram_file A yaml file with diagram definition
+#' @param db_meta Database meta data
+#' @param db_meta_desc Database meta data with table descriptions
+#' @export
+print_diagram_description <- function(diagram_file, db_meta = NULL, db_meta_desc = NULL) {
+  if(missing(db_meta)) {
+    db_meta <- get0(".rmdoc_db_meta")
+  }
+  if(missing(db_meta_desc)) {
+    db_meta_desc <- get0(".rmdoc_db_meta_desc")
+  }
+
+  file_name <- diagram_file
+  dm <- get_dm_from_yaml(file_name, db_meta = db_meta)
+
+  tables <- sort(dm$tables$table)
+  get_table_description(tables, db_meta = db_meta, db_meta_desc = db_meta_desc)
+}
