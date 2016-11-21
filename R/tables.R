@@ -19,11 +19,11 @@ get_excel_table <- function(file, sheet) {
 #' @export
 get_excel_data <- function(file, skip_empty = TRUE, replace_na = NA) {
   sheets <- readxl::excel_sheets(file)
-  setNames(
+  stats::setNames(
     lapply(sheets, function(sheet) {
       tab <- readxl::read_excel(file, sheet)
       if(skip_empty) {
-        tab <- tab[ complete.cases(tab[, 1]), ]
+        tab <- tab[ stats::complete.cases(tab[, 1]), ]
       }
       tab[is.na(tab)] <- replace_na
       tab
@@ -84,4 +84,35 @@ get_sql <- function(sql_file, ...) {
 run_sql <- function(sql_file, database, ...) {
   sql <- get_sql(sql_file, ...)
   rmdoc::get_database_data(database, sql)
+}
+
+#' Get code table data
+#'
+#' @param code_table A code table name (database table name)
+#' @param name_col Cold table field name with codes
+#' @param value_col Cold table field name with values
+#' @param database Database logical name
+#' @return Returns a code table as a list of values
+#' @name code_tables
+#' @export
+get_code_table <- function(code_table, name_col, value_col, database) {
+  query = sprintf("select %s, %s from %s", name_col, value_col, code_table)
+  ct_data <- rmdoc::get_database_data(database, query)
+  as.list(stats::setNames(ct_data[,value_col], ct_data[,name_col]))
+}
+
+#' Get code table data
+#'
+#' Returns code table as a list of values
+#'
+#' @param code_tables A list of code tables with elements: code_table, name_col,
+#'   value_col
+#' @rdname code_tables
+#' @export
+get_code_tables <- function(code_tables, database) {
+
+  adinsure_ct <- lapply(code_tables, function(x) {
+    x$database = database
+    do.call(get_code_table, args = x)
+  })
 }
